@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<title>TikLive Overlay</title>
+<style>
+  html, body { margin:0; background:transparent; overflow:hidden; font-family: 'Segoe UI', sans-serif; }
+  #stage { position:relative; width:100vw; height:100vh; }
+
+  .alert {
+    position:absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    display:flex;
+    align-items:center;
+    gap:16px;
+    background: linear-gradient(135deg, rgba(224,36,94,0.95), rgba(120,20,150,0.95));
+    padding: 16px 28px;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    opacity:0;
+    transition: all 0.4s ease;
+    max-width: 600px;
+  }
+  .alert.show { opacity:1; transform: translateX(-50%) translateY(0); }
+
+  .avatar { width:64px; height:64px; border-radius:50%; border:3px solid #fff; object-fit:cover; }
+  .info { color:#fff; }
+  .name { font-size:20px; font-weight:bold; }
+  .gift { font-size:15px; opacity:0.9; }
+  .reaction { font-size:17px; margin-top:4px; font-style:italic; }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const stage = document.getElementById("stage");
+
+    socket.on("gift-event", (data) => {
+      const el = document.createElement("div");
+      el.className = "alert";
+      el.innerHTML = `
+        <img class="avatar" src="${data.profilePictureUrl || ''}" onerror="this.style.display='none'">
+        <div class="info">
+          <div class="name">${escapeHtml(data.nickname)}</div>
+          <div class="gift">🎁 ${escapeHtml(data.giftName)} x${data.repeatCount} · ${data.diamondCount} almaz</div>
+          <div class="reaction">${escapeHtml(data.reaction)}</div>
+        </div>
+      `;
+      stage.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("show"));
+
+      setTimeout(() => {
+        el.classList.remove("show");
+        setTimeout(() => el.remove(), 500);
+      }, 5000);
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str || "";
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
